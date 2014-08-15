@@ -3,7 +3,7 @@ package org.camunda.bpm.unittest.tasks;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
-import org.camunda.bpm.engine.impl.cmd.SetProcessDefinitionVersionCmd;
+import org.camunda.bpm.unittest.SetProcessDefinitionVersionCmd;
 
 public class MigrateVersion implements JavaDelegate {
   private ProcessEngineConfigurationImpl processEngineConfiguration;

@@ -17,14 +17,16 @@ import org.camunda.bpm.engine.history.HistoricActivityInstance;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
+import static org.junit.Assert.assertEquals;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/camunda.cfg.xml")
@@ -39,12 +41,12 @@ public class MigrationTest {
     RepositoryService repositoryService = processEngine.getRepositoryService();
     String deploymentV1 = repositoryService.createDeployment()
             .name("v1")
-            .addClasspathResource("process-v1.bpmn")
+            .addClasspathResource("process-v2.bpmn")
             .deploy()
             .getId();
     String deploymentV2 = repositoryService.createDeployment()
             .name("v2")
-            .addClasspathResource("process-v2.bpmn")
+            .addClasspathResource("process-v3.bpmn")
             .deploy()
             .getId();
 
@@ -75,15 +77,15 @@ public class MigrationTest {
     Job secondJob = managementService.createJobQuery()
             .processInstanceId(processInstanceId)
             .singleResult();
-    assertNotNull("After the version migration the process should have an additional async task", secondJob);
-    managementService.executeJob(secondJob.getId());
+    assertNull("After the version migration the second async task should be removed", secondJob);
 
     HistoryService historyService = processEngine.getHistoryService();
     HistoricActivityInstance historicActivityInstance = historyService.createHistoricActivityInstanceQuery()
             .processInstanceId(processInstanceId)
             .activityId("secondTask")
             .singleResult();
-    assertNotNull("Second async task should have been executed", historicActivityInstance);
+		
+    assertNull("After the version migration the second async task should be removed", historicActivityInstance);
   }
 
 }
