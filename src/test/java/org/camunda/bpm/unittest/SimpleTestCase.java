@@ -13,19 +13,16 @@
 package org.camunda.bpm.unittest;
 
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.repository.ProcessDefinition;
+import org.camunda.bpm.engine.repository.ProcessDefinitionQuery;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.junit.Assert.*;
-
 import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * @author Daniel Meyer
+ * Run this in a profiler with profiling root set to the benchmark method.
  *
  */
 public class SimpleTestCase {
@@ -38,21 +35,28 @@ public class SimpleTestCase {
   public void shouldExecuteProcess() {
 
     RuntimeService runtimeService = rule.getRuntimeService();
-    TaskService taskService = rule.getTaskService();
+    final ProcessDefinitionQuery query = rule.getRepositoryService().createProcessDefinitionQuery();
+    ProcessDefinition pd = query.processDefinitionKey("testProcess").latestVersion().singleResult();
+    String processDefinitionId = pd.getId();
 
-    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
-    assertFalse("Process instance should not be ended", pi.isEnded());
-    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+    warmup(runtimeService, processDefinitionId);
+    benchmark(runtimeService, processDefinitionId);
+  }
 
-    Task task = taskService.createTaskQuery().singleResult();
-    assertNotNull("Task should exist", task);
+  private static void warmup(RuntimeService runtimeService, String processDefinitionId) {
+    runProcesses(runtimeService, processDefinitionId, 2);
+    runProcesses(runtimeService, processDefinitionId, 2);
+    runProcesses(runtimeService, processDefinitionId, 6);
+  }
 
-    // complete the task
-    taskService.complete(task.getId());
+  private static void benchmark(RuntimeService runtimeService, String processDefinitionId) {
+    runProcesses(runtimeService, processDefinitionId, 100);
+  }
 
-    // now the process instance should be ended
-    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
-
+  private static void runProcesses(RuntimeService runtimeService, String processDefinitionId, int count) {
+    for (int i = 0; i < count; i++) {
+      ProcessInstance pi = runtimeService.startProcessInstanceById(processDefinitionId);
+    }
   }
 
 }
