@@ -32,6 +32,9 @@
   </bean>
 
   <bean id="foxFailedJobCommandFactory" class="org.camunda.bpm.engine.impl.jobexecutor.FoxFailedJobCommandFactory" />
+    
+  <bean id="save" class="org.camunda.bpm.unittest.SaveTask"/>
+  <bean id="rollback" class="org.camunda.bpm.unittest.RollbackTask"/>
 
   <!--<bean id="uuidGenerator" class="org.camunda.bpm.engine.impl.persistence.StrongUuidGenerator" />-->
 

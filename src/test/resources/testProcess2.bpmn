@@ -16,7 +16,7 @@
     <bpmn2:exclusiveGateway id="shouldRollback" name="should rollback?&#xA;">
       <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_5</bpmn2:outgoing>
-      <bpmn2:outgoing>SequenceFlow_11</bpmn2:outgoing>
+      <bpmn2:outgoing>SequenceFlow_9</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_5" name="no" sourceRef="shouldRollback" targetRef="endFinished">
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">#{false}</bpmn2:conditionExpression>
@@ -25,13 +25,18 @@
       <bpmn2:compensateEventDefinition id="CompensateEventDefinition_2" waitForCompletion="true"/>
     </bpmn2:boundaryEvent>
     <bpmn2:serviceTask id="rollback" camunda:delegateExpression="#{rollback}" name="rollback" isForCompensation="true"/>
-    <bpmn2:endEvent id="endRollback">
-      <bpmn2:incoming>SequenceFlow_11</bpmn2:incoming>
-      <bpmn2:compensateEventDefinition id="CompensateEventDefinition_6" waitForCompletion="true"/>
-    </bpmn2:endEvent>
-    <bpmn2:sequenceFlow id="SequenceFlow_11" name="" sourceRef="shouldRollback" targetRef="endRollback">
+    <bpmn2:sequenceFlow id="SequenceFlow_9" name="" sourceRef="shouldRollback" targetRef="IntermediateThrowEvent_2">
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">#{true}</bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
+    <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_2">
+      <bpmn2:incoming>SequenceFlow_9</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_10</bpmn2:outgoing>
+      <bpmn2:compensateEventDefinition id="CompensateEventDefinition_5" waitForCompletion="true"/>
+    </bpmn2:intermediateThrowEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_10" name="" sourceRef="IntermediateThrowEvent_2" targetRef="endRollback"/>
+    <bpmn2:endEvent id="endRollback">
+      <bpmn2:incoming>SequenceFlow_10</bpmn2:incoming>
+    </bpmn2:endEvent>
     <bpmn2:association id="Association_1" sourceRef="BoundaryEvent_1" targetRef="rollback"/>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -81,17 +86,33 @@
         <di:waypoint xsi:type="dc:Point" x="451.0" y="277.0"/>
         <di:waypoint xsi:type="dc:Point" x="504.0" y="322.0"/>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_IntermediateThrowEvent_3" bpmnElement="IntermediateThrowEvent_2">
+        <dc:Bounds height="36.0" width="36.0" x="533.0" y="108.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="0.0" width="0.0" x="551.0" y="149.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_9" bpmnElement="SequenceFlow_9" sourceElement="_BPMNShape_ExclusiveGateway_2" targetElement="_BPMNShape_IntermediateThrowEvent_3">
+        <di:waypoint xsi:type="dc:Point" x="553.0" y="196.0"/>
+        <di:waypoint xsi:type="dc:Point" x="553.0" y="170.0"/>
+        <di:waypoint xsi:type="dc:Point" x="551.0" y="170.0"/>
+        <di:waypoint xsi:type="dc:Point" x="551.0" y="144.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="6.0" width="6.0" x="549.0" y="170.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_EndEvent_8" bpmnElement="endRollback">
         <dc:Bounds height="36.0" width="36.0" x="533.0" y="36.0"/>
         <bpmndi:BPMNLabel>
           <dc:Bounds height="0.0" width="0.0" x="551.0" y="77.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_11" bpmnElement="SequenceFlow_11" sourceElement="_BPMNShape_ExclusiveGateway_2" targetElement="_BPMNShape_EndEvent_8">
-        <di:waypoint xsi:type="dc:Point" x="553.0" y="196.0"/>
-        <di:waypoint xsi:type="dc:Point" x="553.0" y="134.0"/>
-        <di:waypoint xsi:type="dc:Point" x="551.0" y="134.0"/>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_10" bpmnElement="SequenceFlow_10" sourceElement="_BPMNShape_IntermediateThrowEvent_3" targetElement="_BPMNShape_EndEvent_8">
+        <di:waypoint xsi:type="dc:Point" x="551.0" y="108.0"/>
         <di:waypoint xsi:type="dc:Point" x="551.0" y="72.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="6.0" width="6.0" x="548.0" y="83.0"/>
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

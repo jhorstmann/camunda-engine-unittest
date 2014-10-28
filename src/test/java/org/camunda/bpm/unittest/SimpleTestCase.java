@@ -12,47 +12,60 @@
  */
 package org.camunda.bpm.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.history.HistoricActivityInstance;
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.junit.Assert.*;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Daniel Meyer
- *
- */
 public class SimpleTestCase {
 
-  @Rule
-  public ProcessEngineRule rule = new ProcessEngineRule();
+    @Rule
+    public ProcessEngineRule rule = new ProcessEngineRule();
 
-  @Test
-  @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void shouldExecuteProcess1() {
+        run();
+    }
 
-    RuntimeService runtimeService = rule.getRuntimeService();
-    TaskService taskService = rule.getTaskService();
+    @Test
+    @Deployment(resources = {"testProcess2.bpmn"})
+    public void shouldExecuteProcess2() {
+        run();
+    }
 
-    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
-    assertFalse("Process instance should not be ended", pi.isEnded());
-    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+    private void run() {
+        RuntimeService runtimeService = rule.getRuntimeService();
 
-    Task task = taskService.createTaskQuery().singleResult();
-    assertNotNull("Task should exist", task);
+        ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
+        assertTrue(pi.isEnded());
 
-    // complete the task
-    taskService.complete(task.getId());
+        final HistoryService historyService = rule.getHistoryService();
+        final String pid = pi.getProcessInstanceId();
+        final HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
+                                                                              .processInstanceId(pid).singleResult();
+        assertEquals("endRollback", historicProcessInstance.getEndActivityId());
 
-    // now the process instance should be ended
-    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+        final HistoricActivityInstance save = historyService.createHistoricActivityInstanceQuery()
+                                                            .processInstanceId(pid).activityId("save").singleResult();
 
-  }
+        assertNotNull("save service task should have been executed", save);
+
+        final HistoricActivityInstance rollback = historyService.createHistoricActivityInstanceQuery()
+                                                                .processInstanceId(pid).activityId("rollback")
+                                                                .singleResult();
+
+        assertNotNull("rollback service task should have been executed", rollback);
+    }
 
 }
