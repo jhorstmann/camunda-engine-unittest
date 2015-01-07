@@ -13,7 +13,7 @@
         <type>pom</type>
         <scope>import</scope>
         <!-- set the version for camunda BPM here -->
-        <version>7.1.0-Final</version>
+        <version>7.2.0-alpha5</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

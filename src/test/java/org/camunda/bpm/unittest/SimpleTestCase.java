@@ -12,47 +12,86 @@
  */
 package org.camunda.bpm.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.history.HistoricActivityInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.junit.Assert.*;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Daniel Meyer
- *
- */
 public class SimpleTestCase {
 
-  @Rule
-  public ProcessEngineRule rule = new ProcessEngineRule();
+    @Rule
+    public ProcessEngineRule rule = new ProcessEngineRule();
 
-  @Test
-  @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void shouldExecuteProcess() throws InterruptedException, ExecutionException {
 
-    RuntimeService runtimeService = rule.getRuntimeService();
-    TaskService taskService = rule.getTaskService();
+        final RuntimeService runtimeService = rule.getRuntimeService();
 
-    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
-    assertFalse("Process instance should not be ended", pi.isEnded());
-    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+        final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
 
-    Task task = taskService.createTaskQuery().singleResult();
-    assertNotNull("Task should exist", task);
+        final String businessKey = UUID.randomUUID().toString();
 
-    // complete the task
-    taskService.complete(task.getId());
+        final ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess", businessKey);
 
-    // now the process instance should be ended
-    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+        assertFalse("Process instance should not be ended", pi.isEnded());
+        assertEquals(1, runtimeService.createProcessInstanceQuery().count());
 
-  }
+        List<ScheduledFuture<?>> futures = new ArrayList<ScheduledFuture<?>>();
+        for (int i = 0; i < 2; i++) {
+            futures.add(executorService.schedule(new Callable<Exception>() {
+                        @Override
+                        public Exception call() {
+                            try {
+                                runtimeService.correlateMessage("message1", businessKey);
+                                return null;
+                            } catch (Exception ex) {
+                                return ex;
+                            }
+                        }
+                    }, 100 * i, TimeUnit.MILLISECONDS));
+        }
+
+        executorService.awaitTermination(1, TimeUnit.SECONDS);
+
+        assertEquals(2, futures.size());
+
+        ScheduledFuture<?> firstMessage = futures.get(0);
+        assertNull("First message should have succeeeded", firstMessage.get());
+
+        ScheduledFuture<?> secondMessage = futures.get(0);
+        assertNotNull("Second message should have failed", secondMessage.get());
+
+        // now the process instance should be ended
+        assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+
+        List<HistoricActivityInstance> tasks = rule.getHistoryService().createHistoricActivityInstanceQuery()
+                                                   .processInstanceId(pi.getProcessInstanceId())
+                                                   .activityId("slowServiceTask").list();
+
+        assertEquals("Task should be executed once", 1, tasks.size());
+
+        HistoricActivityInstance task = tasks.get(0);
+        assertNotNull("Service task should have finished", task.getEndTime());
+    }
 
 }
