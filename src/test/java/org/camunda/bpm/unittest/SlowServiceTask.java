@@ -15,11 +15,11 @@ public class SlowServiceTask implements JavaDelegate {
         Boolean alreadyExecuted = executions.putIfAbsent(delegateExecution.getId(), Boolean.TRUE);
 
         if (alreadyExecuted != null) {
-            throw new IllegalStateException("Service task was already executed for this execution!");
+            throw new AlreadyExecutedException("Service task was already executed for this execution!");
         }
 
         System.out.println("Begin service task");
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
         System.out.println("End service task");
     }
 }

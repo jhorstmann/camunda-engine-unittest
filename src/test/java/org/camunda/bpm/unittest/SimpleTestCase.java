@@ -56,8 +56,9 @@ public class SimpleTestCase {
         assertFalse("Process instance should not be ended", pi.isEnded());
         assertEquals(1, runtimeService.createProcessInstanceQuery().count());
 
-        List<ScheduledFuture<?>> futures = new ArrayList<ScheduledFuture<?>>();
+        List<ScheduledFuture<Exception>> futures = new ArrayList<ScheduledFuture<Exception>>();
         for (int i = 0; i < 2; i++) {
+            final int j = i;
             futures.add(executorService.schedule(new Callable<Exception>() {
                         @Override
                         public Exception call() {
@@ -71,15 +72,22 @@ public class SimpleTestCase {
                     }, 100 * i, TimeUnit.MILLISECONDS));
         }
 
-        executorService.awaitTermination(1, TimeUnit.SECONDS);
+        executorService.awaitTermination(5, TimeUnit.SECONDS);
 
         assertEquals(2, futures.size());
 
-        ScheduledFuture<?> firstMessage = futures.get(0);
-        assertNull("First message should have succeeeded", firstMessage.get());
+        ScheduledFuture<Exception> firstMessage = futures.get(0);
+        Exception ex1 = firstMessage.get();
+        assertNull("First message correlation should have succeeeded", ex1);
 
-        ScheduledFuture<?> secondMessage = futures.get(0);
-        assertNotNull("Second message should have failed", secondMessage.get());
+        ScheduledFuture<Exception> secondMessage = futures.get(1);
+        Exception ex2 = secondMessage.get();
+        assertNotNull("Second message correlation should lead to an exception", ex2);
+
+        assertFalse("Second message correlation should have been prevented by the engine",
+            ex2 instanceof AlreadyExecutedException);
+        assertFalse("Second message correlation should have been prevented by the engine",
+            ex2.getMessage().contains("already executed"));
 
         // now the process instance should be ended
         assertEquals(0, runtimeService.createProcessInstanceQuery().count());
