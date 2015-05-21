@@ -12,47 +12,74 @@
  */
 package org.camunda.bpm.unittest;
 
+import static java.util.Collections.singletonMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Map;
+
+import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
 
-import static org.junit.Assert.*;
-
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Daniel Meyer
- *
- */
 public class SimpleTestCase {
 
-  @Rule
-  public ProcessEngineRule rule = new ProcessEngineRule();
+    @Rule
+    public ProcessEngineRule rule = new ProcessEngineRule();
 
-  @Test
-  @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void timerShouldNotBeActive() {
 
-    RuntimeService runtimeService = rule.getRuntimeService();
-    TaskService taskService = rule.getTaskService();
+        RuntimeService runtimeService = rule.getRuntimeService();
+        ManagementService managementService = rule.getManagementService();
 
-    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
-    assertFalse("Process instance should not be ended", pi.isEnded());
-    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+        Map<String, Object> variables = singletonMap("isTimerActive", (Object) false);
+        ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess", variables);
+        assertFalse("Process instance should not be ended", pi.isEnded());
 
-    Task task = taskService.createTaskQuery().singleResult();
-    assertNotNull("Task should exist", task);
+        String id = pi.getProcessInstanceId();
+        Job timer = managementService.createJobQuery().processInstanceId(id).timers().active().singleResult();
 
-    // complete the task
-    taskService.complete(task.getId());
+        Assert.assertNull("There should be no active timer", timer);
 
-    // now the process instance should be ended
-    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+        runtimeService.createMessageCorrelation("message1").processInstanceId(id).correlate();
 
-  }
+        // now the process instance should be ended
+        assertEquals("Process instance should be finished", 0, runtimeService.createProcessInstanceQuery().count());
+
+    }
+
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void timerShouldBeActive() {
+
+        RuntimeService runtimeService = rule.getRuntimeService();
+        ManagementService managementService = rule.getManagementService();
+
+        Map<String, Object> variables = singletonMap("isTimerActive", (Object) true);
+        ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess", variables);
+        assertFalse("Process instance should not be ended", pi.isEnded());
+
+        String id = pi.getProcessInstanceId();
+        Job timer = managementService.createJobQuery().processInstanceId(id).timers().active().singleResult();
+
+        Assert.assertNotNull("There should be an active timer", timer);
+        assertNotNull(timer.getDuedate());
+        managementService.executeJob(timer.getId());
+
+        // now the process instance should be ended
+        assertEquals("Process instance should be finished", 0, runtimeService.createProcessInstanceQuery().count());
+
+    }
 
 }
