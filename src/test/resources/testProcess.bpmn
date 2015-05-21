@@ -26,7 +26,7 @@
     </bpmn2:exclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_1" name="" sourceRef="StartEvent_1" targetRef="ExclusiveGateway_2"/>
     <bpmn2:sequenceFlow id="SequenceFlow_2" name="yes" sourceRef="ExclusiveGateway_2" targetRef="EventBasedGateway_1">
-      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" camunda:resource="${isTimerActive}"/>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${isTimerActive}</bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="SequenceFlow_5" name="no" sourceRef="ExclusiveGateway_2" targetRef="EventBasedGateway_2">
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${not isTimerActive}</bpmn2:conditionExpression>
