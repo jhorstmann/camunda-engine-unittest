@@ -13,10 +13,10 @@
 package org.camunda.bpm.unittest;
 
 import static java.util.Collections.singletonMap;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -26,7 +26,6 @@ import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,7 +60,7 @@ public class SimpleTestCase {
 
     @Test
     @Deployment(resources = {"testProcess.bpmn"})
-    public void timerShouldBeActive() {
+    public void timerShouldBeSuspended() {
 
         RuntimeService runtimeService = rule.getRuntimeService();
         ManagementService managementService = rule.getManagementService();
@@ -71,14 +70,11 @@ public class SimpleTestCase {
         assertFalse("Process instance should not be ended", pi.isEnded());
 
         String id = pi.getProcessInstanceId();
-        Job timer = managementService.createJobQuery().processInstanceId(id).timers().active().singleResult();
+        Job timer = managementService.createJobQuery().processInstanceId(id).timers().singleResult();
 
-        Assert.assertNotNull("There should be an active timer", timer);
+        Assert.assertNotNull("There should be a suspended timer", timer);
         assertNotNull(timer.getDuedate());
-        managementService.executeJob(timer.getId());
-
-        // now the process instance should be ended
-        assertEquals("Process instance should be finished", 0, runtimeService.createProcessInstanceQuery().count());
+        assertTrue(timer.isSuspended());
 
     }
 
