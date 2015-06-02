@@ -17,46 +17,48 @@ import java.util.List;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.impl.context.Context;
+import org.camunda.bpm.engine.impl.db.DbSqlSession;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandContextListener;
 import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.SuspensionState;
 
 /**
- * @author Thorben Lindhauer
- *
+ * @author  Thorben Lindhauer
  */
 public class DisableTimerExecutionListener implements ExecutionListener {
 
-  @Override
-  public void notify(DelegateExecution execution) throws Exception {
-    final String eventBasedGatewayExecutionId = execution.getId();
+    @Override
+    public void notify(final DelegateExecution execution) throws Exception {
+        final String eventBasedGatewayExecutionId = execution.getId();
 
-    // wird am Ende der Transaktion, vor dem Flush in die Datenbank aufgerufen
-    Context.getCommandContext().registerCommandContextListener(new CommandContextListener() {
+        // wird am Ende der Transaktion, vor dem Flush in die Datenbank aufgerufen
+        Context.getCommandContext().registerCommandContextListener(new CommandContextListener() {
+                @Override
+                public void onCommandFailed(final CommandContext commandContext, final Throwable t) { }
 
-      @Override
-      public void onCommandFailed(CommandContext commandContext, Throwable t) {
-      }
+                @Override
+                public void onCommandContextClose(final CommandContext commandContext) {
 
-      @Override
-      public void onCommandContextClose(CommandContext commandContext) {
+                    DbSqlSession dbSqlSession = commandContext.getSession(DbSqlSession.class);
+                    List<JobEntity> jobs = dbSqlSession.findInCache(JobEntity.class);
+                    for (JobEntity job : jobs) {
 
-        List<JobEntity> jobs = commandContext.getDbEntityManager().getCachedEntitiesByType(JobEntity.class);
-        for (JobEntity job : jobs) {
-          // hier könnte man ggf noch weiter einschränken, falls es mehr als einen TimerJob für das exclusive Gateway gibt
-          if (eventBasedGatewayExecutionId.equals(job.getExecutionId())) {
-            job.setSuspensionState(SuspensionState.SUSPENDED.getStateCode());
+                        // hier kï¿½nnte man ggf noch weiter einschrï¿½nken, falls es mehr als einen TimerJob fï¿½r das
+                        // exclusive Gateway gibt
+                        if (eventBasedGatewayExecutionId.equals(job.getExecutionId())) {
+                            job.setSuspensionState(SuspensionState.SUSPENDED.getStateCode());
 
-            // falls der Job sofort (bzw. vor dem nächsten Pollen durch den Job-Executor) due ist
-            // wird er direkt in dieser Queue abgelegt, sodass der Job-Executor ihn unmittelbar ausführt;
-            // entsprechend müssen wir ihn wieder entfernen
-            Context.getJobExecutorContext().getCurrentProcessorJobQueue().remove(job.getId());
-          }
-        }
-      }
-    });
+                            // falls der Job sofort (bzw. vor dem nï¿½chsten Pollen durch den Job-Executor) due ist
+                            // wird er direkt in dieser Queue abgelegt, sodass der Job-Executor ihn unmittelbar
+                            // ausfï¿½hrt;
+                            // entsprechend mï¿½ssen wir ihn wieder entfernen
+                            // Context.getJobExecutorContext().getCurrentProcessorJobQueue().remove(job.getId());
+                        }
+                    }
+                }
+            });
 
-  }
+    }
 
 }
