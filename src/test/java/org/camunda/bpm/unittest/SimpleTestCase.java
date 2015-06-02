@@ -51,7 +51,10 @@ public class SimpleTestCase {
 
         final String businessKey = UUID.randomUUID().toString();
 
-        ProcessInstance pi = runtimeService.startProcessInstanceByMessage("message", businessKey);
+        runtimeService.createMessageCorrelation("message").processInstanceBusinessKey(businessKey).correlate();
+
+        ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceBusinessKey(businessKey)
+                                           .singleResult();
         assertFalse("Process instance should not be ended", pi.isEnded());
         assertEquals(1, runtimeService.createProcessInstanceQuery().count());
 
@@ -77,7 +80,10 @@ public class SimpleTestCase {
 
         final String businessKey = UUID.randomUUID().toString();
 
-        ProcessInstance pi = runtimeService.startProcessInstanceByMessage("message", businessKey);
+        runtimeService.createMessageCorrelation("message").processInstanceBusinessKey(businessKey).correlate();
+
+        ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceBusinessKey(businessKey)
+                                           .singleResult();
         assertFalse("Process instance should not be ended", pi.isEnded());
         assertEquals(1, runtimeService.createProcessInstanceQuery().count());
 
