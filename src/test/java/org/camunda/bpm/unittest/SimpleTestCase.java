@@ -12,47 +12,87 @@
  */
 package org.camunda.bpm.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.util.UUID;
+
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.repository.DeploymentBuilder;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.junit.Assert.*;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Daniel Meyer
- *
- */
 public class SimpleTestCase {
 
-  @Rule
-  public ProcessEngineRule rule = new ProcessEngineRule();
+    @Rule
+    public ProcessEngineRule rule = new ProcessEngineRule();
 
-  @Test
-  @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void shouldDeployWithoutRunningProcesses() {
 
-    RuntimeService runtimeService = rule.getRuntimeService();
-    TaskService taskService = rule.getTaskService();
+        DeploymentBuilder deployment = rule.getRepositoryService().createDeployment();
+        deployment.addClasspathResource("testProcess.bpmn");
+        deployment.addClasspathResource("testProcess.png");
+        deployment.name("testProcess_v2");
+        deployment.deploy();
 
-    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
-    assertFalse("Process instance should not be ended", pi.isEnded());
-    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+    }
 
-    Task task = taskService.createTaskQuery().singleResult();
-    assertNotNull("Task should exist", task);
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void shouldDeployAfterFinishedProcess() {
 
-    // complete the task
-    taskService.complete(task.getId());
+        RuntimeService runtimeService = rule.getRuntimeService();
 
-    // now the process instance should be ended
-    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+        final String businessKey = UUID.randomUUID().toString();
 
-  }
+        ProcessInstance pi = runtimeService.startProcessInstanceByMessage("message", businessKey);
+        assertFalse("Process instance should not be ended", pi.isEnded());
+        assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+
+        runtimeService.createMessageCorrelation("message").processInstanceBusinessKey(businessKey).correlate();
+
+        // now the process instance should be ended
+        assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+
+        {
+            DeploymentBuilder deployment = rule.getRepositoryService().createDeployment();
+            deployment.addClasspathResource("testProcess.bpmn");
+            deployment.addClasspathResource("testProcess.png");
+            deployment.name("testProcess_v2");
+            deployment.deploy();
+        }
+    }
+
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void shouldDeployWithActiveRunningProcess() {
+
+        RuntimeService runtimeService = rule.getRuntimeService();
+
+        final String businessKey = UUID.randomUUID().toString();
+
+        ProcessInstance pi = runtimeService.startProcessInstanceByMessage("message", businessKey);
+        assertFalse("Process instance should not be ended", pi.isEnded());
+        assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+
+        {
+            DeploymentBuilder deployment = rule.getRepositoryService().createDeployment();
+            deployment.addClasspathResource("testProcess.bpmn");
+            deployment.addClasspathResource("testProcess.png");
+            deployment.name("testProcess_v2");
+            deployment.deploy();
+        }
+
+        runtimeService.createMessageCorrelation("message").processInstanceBusinessKey(businessKey).correlate();
+
+        // now the process instance should be ended
+        assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+    }
 
 }
