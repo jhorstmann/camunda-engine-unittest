@@ -12,14 +12,23 @@
  */
 package org.camunda.bpm.unittest;
 
+import org.camunda.bpm.engine.ManagementService;
+import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
+import org.camunda.bpm.engine.runtime.Incident;
+import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
 
-import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.Date;
 
 /**
  * @author Daniel Meyer
@@ -32,20 +41,37 @@ public class SimpleTestCase {
 
   @Test
   @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
-    // Given we create a new process instance
-    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess");
-    // Then it should be active
-    assertThat(processInstance).isActive();
-    // And it should be the only instance
-    assertThat(processInstanceQuery().count()).isEqualTo(1);
-    // And there should exist just a single task within that process instance
-    assertThat(task(processInstance)).isNotNull();
+  public void shouldExecuteProcess() throws InterruptedException {
 
-    // When we complete that task
-    complete(task(processInstance));
-    // Then the process instance should be ended
-    assertThat(processInstance).isEnded();
+    RuntimeService runtimeService = rule.getRuntimeService();
+    ManagementService managementService = rule.getManagementService();
+
+    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
+    assertFalse("Process instance should not be ended", pi.isEnded());
+    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+
+    /*
+    Incident incident = runtimeService.createIncidentQuery().processInstanceId(pi.getId()).singleResult();
+
+    assertNotNull(incident);
+    */
+
+    for (int i = 0; i < 60; i++) {
+      JobEntity job = (JobEntity) managementService.createJobQuery().singleResult();
+      if (job != null) {
+        System.out.println("Exp : " + job.getLockExpirationTime());
+
+        Thread.sleep(1000L);
+      } else {
+        break;
+      }
+    }
+
+
+
+    // now the process instance should be ended
+    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+
   }
 
 }

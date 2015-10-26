@@ -15,7 +15,7 @@
     <property name="databaseSchemaUpdate" value="true" />
 
     <!-- job executor configurations -->
-    <property name="jobExecutorActivate" value="false" />
+    <property name="jobExecutorActivate" value="true" />
 
     <property name="history" value="full" />
 
@@ -43,8 +43,6 @@
 
   <!--<bean id="uuidGenerator" class="org.camunda.bpm.engine.impl.persistence.StrongUuidGenerator" />-->
 
-  <!-- engine plugin beans -->
-  <bean id="connectProcessEnginePlugin" class="org.camunda.connect.plugin.impl.ConnectProcessEnginePlugin" />
-  <bean id="spinProcessEnginePlugin" class="org.camunda.spin.plugin.impl.SpinProcessEnginePlugin" />
+  <bean id="servicetask" class="org.camunda.bpm.unittest.Servicetask" />
 
 </beans>
