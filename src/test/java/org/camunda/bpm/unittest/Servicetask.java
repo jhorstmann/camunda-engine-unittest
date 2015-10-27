@@ -10,9 +10,9 @@ public class Servicetask implements JavaDelegate {
     private static final AtomicInteger counter = new AtomicInteger();
 
     public void execute(DelegateExecution delegateExecution) throws Exception {
-        if (counter.getAndIncrement() <= 10) {
-            Thread.sleep(2000L);
-            throw new RuntimeException("Failed on first try");
+        int i = counter.getAndIncrement();
+        if (i <= 10) {
+            throw new RuntimeException("Failed on try" + i);
         } else {
             System.out.println(new Date() + "\t" + getClass().getName());
         }

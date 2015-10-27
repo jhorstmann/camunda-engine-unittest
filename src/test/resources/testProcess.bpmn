@@ -6,7 +6,7 @@
     </bpmn2:startEvent>
     <bpmn2:serviceTask id="servicetask1" camunda:async="true" camunda:delegateExpression="#{servicetask}" name="servicetask1">
       <bpmn2:extensionElements>
-        <fox:failedJobRetryTimeCycle>R/PT1M</fox:failedJobRetryTimeCycle>
+        <fox:failedJobRetryTimeCycle>R/PT57M</fox:failedJobRetryTimeCycle>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>

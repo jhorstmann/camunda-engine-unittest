@@ -30,10 +30,6 @@ import org.junit.Test;
 
 import java.util.Date;
 
-/**
- * @author Daniel Meyer
- * @author Martin Schimak
- */
 public class SimpleTestCase {
 
   @Rule
@@ -50,13 +46,7 @@ public class SimpleTestCase {
     assertFalse("Process instance should not be ended", pi.isEnded());
     assertEquals(1, runtimeService.createProcessInstanceQuery().count());
 
-    /*
-    Incident incident = runtimeService.createIncidentQuery().processInstanceId(pi.getId()).singleResult();
-
-    assertNotNull(incident);
-    */
-
-    for (int i = 0; i < 60; i++) {
+    for (int i = 0; i < 10; i++) {
       JobEntity job = (JobEntity) managementService.createJobQuery().singleResult();
       if (job != null) {
         System.out.println("Exp : " + job.getLockExpirationTime());
@@ -67,11 +57,8 @@ public class SimpleTestCase {
       }
     }
 
-
-
-    // now the process instance should be ended
-    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
-
+    // process instance should still be active and waiting for retry time cycle
+    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
   }
 
 }
