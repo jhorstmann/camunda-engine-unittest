@@ -12,17 +12,25 @@
  */
 package org.camunda.bpm.unittest;
 
+import org.camunda.bpm.engine.HistoryService;
+import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.history.HistoricActivityInstance;
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
+import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.junit.Assert.*;
-
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Daniel Meyer
@@ -38,21 +46,35 @@ public class SimpleTestCase {
   public void shouldExecuteProcess() {
 
     RuntimeService runtimeService = rule.getRuntimeService();
-    TaskService taskService = rule.getTaskService();
+    ManagementService managementService = rule.getManagementService();
+    HistoryService historyService = rule.getHistoryService();
 
-    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
-    assertFalse("Process instance should not be ended", pi.isEnded());
-    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("testProcess");
+    assertFalse("Process instance should not be ended", processInstance.isEnded());
 
-    Task task = taskService.createTaskQuery().singleResult();
-    assertNotNull("Task should exist", task);
+    final String processInstanceId = processInstance.getId();
 
-    // complete the task
-    taskService.complete(task.getId());
+    final Job task1 = managementService.createJobQuery().processInstanceId(processInstanceId).singleResult();
+    managementService.executeJob(task1.getId());
+
+    runtimeService.createMessageCorrelation("cancelation-requested").processInstanceId(processInstanceId).correlate();
+
+    final HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+
+    assertNotNull("historic process should exist",historicProcessInstance);
 
     // now the process instance should be ended
-    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+    assertNotNull("process should have ended", historicProcessInstance.getEndTime());
+    assertEquals("canceled", historicProcessInstance.getEndActivityId());
 
+    final List<HistoricActivityInstance> historicActivityInstances = historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstanceId).orderPartiallyByOccurrence().asc().list();
+
+    final List<String> activityIds = historicActivityInstances.stream().map(HistoricActivityInstance::getActivityId).collect(toList());
+
+    System.out.println(activityIds);
+
+    assertTrue("task1 should have been executed", activityIds.contains("task1"));
+    assertTrue("compensation should have been executed", activityIds.contains("compensate"));
   }
 
 }

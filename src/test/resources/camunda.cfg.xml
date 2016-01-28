@@ -33,6 +33,10 @@
 
   <bean id="foxFailedJobCommandFactory" class="org.camunda.bpm.engine.impl.jobexecutor.FoxFailedJobCommandFactory" />
 
+  <bean id="task1" class="org.camunda.bpm.unittest.Task"/>
+  <bean id="task2" class="org.camunda.bpm.unittest.Task"/>
+  <bean id="compensate" class="org.camunda.bpm.unittest.Task"/>
+
   <!--<bean id="uuidGenerator" class="org.camunda.bpm.engine.impl.persistence.StrongUuidGenerator" />-->
 
 </beans>
