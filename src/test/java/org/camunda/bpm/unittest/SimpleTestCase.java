@@ -12,19 +12,26 @@
  */
 package org.camunda.bpm.unittest;
 
+import org.camunda.bpm.engine.HistoryService;
+import org.camunda.bpm.engine.ManagementService;
+import org.camunda.bpm.engine.OptimisticLockingException;
+import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
+import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.*;
-
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Daniel Meyer
- * @author Martin Schimak
- */
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class SimpleTestCase {
 
   @Rule
@@ -32,20 +39,62 @@ public class SimpleTestCase {
 
   @Test
   @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
-    // Given we create a new process instance
-    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess");
-    // Then it should be active
-    assertThat(processInstance).isActive();
-    // And it should be the only instance
-    assertThat(processInstanceQuery().count()).isEqualTo(1);
-    // And there should exist just a single task within that process instance
-    assertThat(task(processInstance)).isNotNull();
+  public void shouldExecuteProcess() throws InterruptedException {
+    final RuntimeService runtimeService = rule.getRuntimeService();
+    final ManagementService managementService = rule.getManagementService();
+    final HistoryService historyService = rule.getHistoryService();
 
-    // When we complete that task
-    complete(task(processInstance));
-    // Then the process instance should be ended
-    assertThat(processInstance).isEnded();
+    for (int i = 0; i < 100; i++) {
+
+      System.out.println(i);
+
+      final ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("testProcess", "process" + i, Collections.<String, Object>singletonMap("waitForMessage", false));
+
+      final AtomicBoolean correlated = new AtomicBoolean();
+
+      final ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+      executorService.submit(() -> {
+
+        while (true) {
+          final List<Job> jobs = managementService.createJobQuery().processInstanceId(processInstance.getId()).messages().active().list();
+          if (correlated.get() && jobs.isEmpty()) {
+            return;
+          }
+          for (Job job : jobs) {
+            runJob(job);
+          }
+        }
+      });
+
+      executorService.submit(() -> {
+
+        runtimeService.createMessageCorrelation("message1").processInstanceId(processInstance.getId()).correlate();
+        correlated.set(true);
+      });
+
+      executorService.awaitTermination(1000, TimeUnit.MILLISECONDS);
+
+
+      final HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
+
+      Assert.assertNotNull("process should be ended", historicProcessInstance.getEndTime());
+    }
+
+
+  }
+
+  private void runJob(Job job) {
+    final ManagementService managementService = rule.getManagementService();
+    do {
+      try {
+        //System.out.println("executing " + job.getId());
+        managementService.executeJob(job.getId());
+      } catch (OptimisticLockingException e) {
+        e.printStackTrace();
+        continue;
+      }
+    } while (false);
   }
 
 }
