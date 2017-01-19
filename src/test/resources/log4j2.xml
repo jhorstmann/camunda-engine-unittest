@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%date {%level} [%thread] [%logger] %message%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!--
+        <Logger name="org.camunda.bpm" level="info"/>
+        <Logger name="org.camunda.bpm.engine.impl.persistence" level="info"/>
+        <Logger name="org.camunda.bpm.engine.persistence" level="info"/>
+        -->
+
+        <Root level="info">
+            <AppenderRef ref="stdout"/>
+        </Root>
+    </Loggers>
+
+</Configuration>

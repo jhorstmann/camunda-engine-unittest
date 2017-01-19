@@ -27,19 +27,20 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SimpleTestCase {
 
   @Rule
-  public ProcessEngineRule rule = new ProcessEngineRule();
+  public ProcessEngineRule rule = new ProcessEngineRule(false);
 
   @Test
   @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() throws InterruptedException {
+  public void shouldExecuteProcess() throws InterruptedException, ExecutionException {
     final RuntimeService runtimeService = rule.getRuntimeService();
     final ManagementService managementService = rule.getManagementService();
     final HistoryService historyService = rule.getHistoryService();
@@ -52,29 +53,35 @@ public class SimpleTestCase {
 
       final AtomicBoolean correlated = new AtomicBoolean();
 
-      final ExecutorService executorService = Executors.newFixedThreadPool(2);
+      final ExecutorService executorService = Executors.newCachedThreadPool();
 
-      executorService.submit(() -> {
+      final Future<?> jobExecutor = executorService.submit(() -> {
 
         while (true) {
-          final List<Job> jobs = managementService.createJobQuery().processInstanceId(processInstance.getId()).messages().active().list();
+          final List<Job> jobs = managementService.createJobQuery().executable().active().messages().processInstanceId(processInstance.getId()).list();
           if (correlated.get() && jobs.isEmpty()) {
             return;
           }
           for (Job job : jobs) {
+            System.out.println("executing job " + job.getId());
             runJob(job);
+            System.out.println("executed job " + job.getId());
           }
         }
       });
 
-      executorService.submit(() -> {
+      final Future<?> correlation = executorService.submit(() -> {
 
+        System.out.println("correllating message");
         runtimeService.createMessageCorrelation("message1").processInstanceId(processInstance.getId()).correlate();
         correlated.set(true);
+        System.out.println("correllated message");
       });
 
-      executorService.awaitTermination(1000, TimeUnit.MILLISECONDS);
+      correlation.get();
+      jobExecutor.get();
 
+      Assert.assertEquals("there should be no more jobs", 0, managementService.createJobQuery().processInstanceId(processInstance.getId()).executable().active().count());
 
       final HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
 

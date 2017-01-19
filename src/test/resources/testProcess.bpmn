@@ -1,64 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="_7FrToMrfEeOyYYI9xhG4Cw" targetNamespace="http://camunda.org/schema/1.0/bpmn" exporter="Camunda Modeler" exporterVersion="1.5.1" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
   <bpmn2:process id="testProcess" isExecutable="true">
-    <bpmn2:startEvent id="StartEvent_1">
+    <bpmn2:startEvent id="start">
       <bpmn2:outgoing>SequenceFlow_1653t3j</bpmn2:outgoing>
     </bpmn2:startEvent>
-    <bpmn2:endEvent id="EndEvent_1">
+    <bpmn2:endEvent id="end">
       <bpmn2:incoming>SequenceFlow_120oq6v</bpmn2:incoming>
     </bpmn2:endEvent>
-    <bpmn2:sequenceFlow id="SequenceFlow_1653t3j" sourceRef="StartEvent_1" targetRef="ExclusiveGateway_0d8ib33" />
-    <bpmn2:parallelGateway id="ExclusiveGateway_0d8ib33">
+    <bpmn2:sequenceFlow id="SequenceFlow_1653t3j" sourceRef="start" targetRef="paralle-gateway-diverge" />
+    <bpmn2:parallelGateway id="paralle-gateway-diverge">
       <bpmn2:incoming>SequenceFlow_1653t3j</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_1thqqdi</bpmn2:outgoing>
       <bpmn2:outgoing>SequenceFlow_1g4yfri</bpmn2:outgoing>
     </bpmn2:parallelGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_1thqqdi" sourceRef="ExclusiveGateway_0d8ib33" targetRef="IntermediateThrowEvent_09ibwt7" />
-    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_09ibwt7">
+    <bpmn2:sequenceFlow id="SequenceFlow_1thqqdi" sourceRef="paralle-gateway-diverge" targetRef="catch-message1" />
+    <bpmn2:intermediateCatchEvent id="catch-message1">
       <bpmn2:incoming>SequenceFlow_1thqqdi</bpmn2:incoming>
-      <bpmn2:outgoing>SequenceFlow_1d71eqj</bpmn2:outgoing>
+      <bpmn2:outgoing>SequenceFlow_0a663yt</bpmn2:outgoing>
       <bpmn2:messageEventDefinition messageRef="Message_1fe4puv" />
     </bpmn2:intermediateCatchEvent>
-    <bpmn2:sequenceFlow id="SequenceFlow_1d71eqj" sourceRef="IntermediateThrowEvent_09ibwt7" targetRef="ExclusiveGateway_08wxlnz" />
-    <bpmn2:parallelGateway id="ExclusiveGateway_08wxlnz" camunda:asyncBefore="true">
-      <bpmn2:incoming>SequenceFlow_1d71eqj</bpmn2:incoming>
+    <bpmn2:parallelGateway id="paralle-gateway-join" camunda:asyncBefore="true">
       <bpmn2:incoming>SequenceFlow_07gbncx</bpmn2:incoming>
+      <bpmn2:incoming>SequenceFlow_0a663yt</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_120oq6v</bpmn2:outgoing>
     </bpmn2:parallelGateway>
-    <bpmn2:exclusiveGateway id="ExclusiveGateway_1jgmexn">
+    <bpmn2:exclusiveGateway id="should-wait-for-message2-diverge">
       <bpmn2:incoming>SequenceFlow_1g4yfri</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_0jgg9zr</bpmn2:outgoing>
       <bpmn2:outgoing>SequenceFlow_18fud1j</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_1g4yfri" sourceRef="ExclusiveGateway_0d8ib33" targetRef="ExclusiveGateway_1jgmexn" />
-    <bpmn2:sequenceFlow id="SequenceFlow_0jgg9zr" name="wait for message" sourceRef="ExclusiveGateway_1jgmexn" targetRef="IntermediateThrowEvent_0ftxcxy">
+    <bpmn2:sequenceFlow id="SequenceFlow_1g4yfri" sourceRef="paralle-gateway-diverge" targetRef="should-wait-for-message2-diverge" />
+    <bpmn2:sequenceFlow id="SequenceFlow_0jgg9zr" name="wait for message" sourceRef="should-wait-for-message2-diverge" targetRef="catch-message2">
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">#{waitForMessage}</bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
-    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_0ftxcxy">
+    <bpmn2:intermediateCatchEvent id="catch-message2">
       <bpmn2:incoming>SequenceFlow_0jgg9zr</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_1xt6f9p</bpmn2:outgoing>
       <bpmn2:messageEventDefinition messageRef="Message_1v22tll" />
     </bpmn2:intermediateCatchEvent>
-    <bpmn2:exclusiveGateway id="ExclusiveGateway_0j4w8km">
+    <bpmn2:exclusiveGateway id="should-wait-for-message2-join">
       <bpmn2:incoming>SequenceFlow_1xt6f9p</bpmn2:incoming>
       <bpmn2:incoming>SequenceFlow_18fud1j</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_07gbncx</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_1xt6f9p" sourceRef="IntermediateThrowEvent_0ftxcxy" targetRef="ExclusiveGateway_0j4w8km" />
-    <bpmn2:sequenceFlow id="SequenceFlow_07gbncx" sourceRef="ExclusiveGateway_0j4w8km" targetRef="ExclusiveGateway_08wxlnz" />
-    <bpmn2:sequenceFlow id="SequenceFlow_18fud1j" name="no wait" sourceRef="ExclusiveGateway_1jgmexn" targetRef="ExclusiveGateway_0j4w8km">
+    <bpmn2:sequenceFlow id="SequenceFlow_1xt6f9p" sourceRef="catch-message2" targetRef="should-wait-for-message2-join" />
+    <bpmn2:sequenceFlow id="SequenceFlow_07gbncx" sourceRef="should-wait-for-message2-join" targetRef="paralle-gateway-join" />
+    <bpmn2:sequenceFlow id="SequenceFlow_18fud1j" name="no wait" sourceRef="should-wait-for-message2-diverge" targetRef="should-wait-for-message2-join">
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">#{not waitForMessage}</bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
-    <bpmn2:sequenceFlow id="SequenceFlow_120oq6v" sourceRef="ExclusiveGateway_08wxlnz" targetRef="EndEvent_1" />
+    <bpmn2:sequenceFlow id="SequenceFlow_120oq6v" sourceRef="paralle-gateway-join" targetRef="end" />
+    <bpmn2:sequenceFlow id="SequenceFlow_0a663yt" sourceRef="catch-message1" targetRef="paralle-gateway-join" />
   </bpmn2:process>
   <bpmn2:message id="Message_1fe4puv" name="message1" />
   <bpmn2:message id="Message_1v22tll" name="message2" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="testProcess">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_3" bpmnElement="StartEvent_1">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_3" bpmnElement="start">
         <dc:Bounds x="247" y="204" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_EndEvent_2" bpmnElement="EndEvent_1">
+      <bpmndi:BPMNShape id="_BPMNShape_EndEvent_2" bpmnElement="end">
         <dc:Bounds x="884" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="902" y="240" width="0" height="0" />
@@ -71,7 +71,7 @@
           <dc:Bounds x="299" y="207" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="ParallelGateway_0pjqery_di" bpmnElement="ExclusiveGateway_0d8ib33">
+      <bpmndi:BPMNShape id="ParallelGateway_0pjqery_di" bpmnElement="paralle-gateway-diverge">
         <dc:Bounds x="315" y="197" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="340" y="247" width="0" height="0" />
@@ -84,26 +84,19 @@
           <dc:Bounds x="414" y="207" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="IntermediateCatchEvent_01v4ul5_di" bpmnElement="IntermediateThrowEvent_09ibwt7">
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_01v4ul5_di" bpmnElement="catch-message1">
         <dc:Bounds x="463" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="481" y="240" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_1d71eqj_di" bpmnElement="SequenceFlow_1d71eqj">
-        <di:waypoint xsi:type="dc:Point" x="499" y="222" />
-        <di:waypoint xsi:type="dc:Point" x="684" y="222" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="592" y="207" width="0" height="0" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="ParallelGateway_10w2bmy_di" bpmnElement="ExclusiveGateway_08wxlnz">
+      <bpmndi:BPMNShape id="ParallelGateway_10w2bmy_di" bpmnElement="paralle-gateway-join">
         <dc:Bounds x="684" y="197" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="709" y="247" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ExclusiveGateway_1jgmexn_di" bpmnElement="ExclusiveGateway_1jgmexn" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="ExclusiveGateway_1jgmexn_di" bpmnElement="should-wait-for-message2-diverge" isMarkerVisible="true">
         <dc:Bounds x="315" y="92" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="340" y="142" width="0" height="0" />
@@ -120,16 +113,16 @@
         <di:waypoint xsi:type="dc:Point" x="365" y="117" />
         <di:waypoint xsi:type="dc:Point" x="463" y="117" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="372" y="102" width="84" height="13" />
+          <dc:Bounds x="371" y="83" width="84" height="13" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="IntermediateCatchEvent_15td5bt_di" bpmnElement="IntermediateThrowEvent_0ftxcxy">
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_15td5bt_di" bpmnElement="catch-message2">
         <dc:Bounds x="463" y="99" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="481" y="135" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ExclusiveGateway_0j4w8km_di" bpmnElement="ExclusiveGateway_0j4w8km" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="ExclusiveGateway_0j4w8km_di" bpmnElement="should-wait-for-message2-join" isMarkerVisible="true">
         <dc:Bounds x="684" y="92" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="709" y="142" width="0" height="0" />
@@ -163,6 +156,13 @@
         <di:waypoint xsi:type="dc:Point" x="884" y="222" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="809" y="197" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0a663yt_di" bpmnElement="SequenceFlow_0a663yt">
+        <di:waypoint xsi:type="dc:Point" x="499" y="222" />
+        <di:waypoint xsi:type="dc:Point" x="684" y="222" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="592" y="207" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
