@@ -12,40 +12,45 @@
  */
 package org.camunda.bpm.unittest;
 
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.*;
-
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Daniel Meyer
- * @author Martin Schimak
- */
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+
+import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.historyService;
+import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.runtimeService;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 public class SimpleTestCase {
 
-  @Rule
-  public ProcessEngineRule rule = new ProcessEngineRule();
+    @Rule
+    public ProcessEngineRule rule = new ProcessEngineRule();
 
-  @Test
-  @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
-    // Given we create a new process instance
-    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess");
-    // Then it should be active
-    assertThat(processInstance).isActive();
-    // And it should be the only instance
-    assertThat(processInstanceQuery().count()).isEqualTo(1);
-    // And there should exist just a single task within that process instance
-    assertThat(task(processInstance)).isNotNull();
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void shouldExecuteProcess() throws Exception {
 
-    // When we complete that task
-    complete(task(processInstance));
-    // Then the process instance should be ended
-    assertThat(processInstance).isEnded();
-  }
+        final String businessKey = UUID.randomUUID().toString();
+
+        final ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess", businessKey);
+        assertFalse(processInstance.isEnded());
+
+        synchronized (CreateOrder.MONITOR) {
+            CreateOrder.MONITOR.wait(10000);
+            Thread.sleep(1000);
+        }
+
+        final HistoricProcessInstance historicProcessInstance = historyService().createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
+        assertNotNull(historicProcessInstance.getEndTime());
+
+    }
+
 
 }
