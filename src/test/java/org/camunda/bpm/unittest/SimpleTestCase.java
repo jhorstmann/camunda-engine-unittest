@@ -12,40 +12,67 @@
  */
 package org.camunda.bpm.unittest;
 
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
-
-import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.*;
-
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * @author Daniel Meyer
- * @author Martin Schimak
- */
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.historyService;
+import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.runtimeService;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 public class SimpleTestCase {
 
-  @Rule
-  public ProcessEngineRule rule = new ProcessEngineRule();
+    @Rule
+    public ProcessEngineRule rule = new ProcessEngineRule();
 
-  @Test
-  @Deployment(resources = {"testProcess.bpmn"})
-  public void shouldExecuteProcess() {
-    // Given we create a new process instance
-    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess");
-    // Then it should be active
-    assertThat(processInstance).isActive();
-    // And it should be the only instance
-    assertThat(processInstanceQuery().count()).isEqualTo(1);
-    // And there should exist just a single task within that process instance
-    assertThat(task(processInstance)).isNotNull();
+    @Test
+    @Deployment(resources = {"testProcess.bpmn"})
+    public void shouldExecuteProcess() throws InterruptedException, ExecutionException {
 
-    // When we complete that task
-    complete(task(processInstance));
-    // Then the process instance should be ended
-    assertThat(processInstance).isEnded();
-  }
+        run("testProcess");
+    }
+
+    @Test
+    @Deployment(resources = {"testProcess2.bpmn"})
+    public void shouldExecuteProcess2() throws InterruptedException, ExecutionException {
+
+        run("testProcess2");
+    }
+
+    private void run(String processDefinitionKey) throws InterruptedException, ExecutionException {
+        final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(4);
+
+        final String businessKey = UUID.randomUUID().toString();
+
+        final Future<?> sendPayment = scheduledExecutorService.schedule(new Runnable() {
+            public void run() {
+                System.out.println("correlate");
+                runtimeService().correlateMessage("messagePayment", businessKey);
+            }
+        }, 200, TimeUnit.MILLISECONDS);
+
+        final ProcessInstance processInstance = runtimeService().startProcessInstanceByKey(processDefinitionKey, businessKey);
+        assertFalse(processInstance.isEnded());
+        runtimeService().correlateMessage("messageContinue", businessKey);
+
+        sendPayment.get();
+        Thread.sleep(1000);
+
+        final HistoricProcessInstance historicProcessInstance = historyService().createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
+        assertNotNull(historicProcessInstance.getEndTime());
+
+        scheduledExecutorService.shutdown();
+    }
 
 }
