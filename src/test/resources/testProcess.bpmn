@@ -28,7 +28,7 @@
       <bpmn2:outgoing>SequenceFlow_0a28a64</bpmn2:outgoing>
     </bpmn2:serviceTask>
     <bpmn2:sequenceFlow id="SequenceFlow_1mrcw60" sourceRef="ExclusiveGateway_1n6w8d4" targetRef="IntermediateThrowEvent_0lgbs9f" />
-    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_0lgbs9f">
+    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_0lgbs9f" name="wait for payment">
       <bpmn2:incoming>SequenceFlow_1mrcw60</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_05frfek</bpmn2:outgoing>
       <bpmn2:messageEventDefinition messageRef="Message_15xmeld" />
@@ -36,7 +36,7 @@
     <bpmn2:sequenceFlow id="SequenceFlow_05frfek" sourceRef="IntermediateThrowEvent_0lgbs9f" targetRef="handlePayment" />
     <bpmn2:sequenceFlow id="SequenceFlow_0fly1sp" sourceRef="ExclusiveGateway_1n6w8d4" targetRef="IntermediateThrowEvent_1m225i3" />
     <bpmn2:sequenceFlow id="SequenceFlow_1isbvmu" sourceRef="IntermediateThrowEvent_1m225i3" targetRef="createOrder" />
-    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_1m225i3">
+    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_1m225i3" name="continue order processing">
       <bpmn2:incoming>SequenceFlow_0fly1sp</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_1isbvmu</bpmn2:outgoing>
       <bpmn2:messageEventDefinition messageRef="Message_1pes68j" />
@@ -57,11 +57,15 @@
     </bpmn2:parallelGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_0q4cqtt" sourceRef="ExclusiveGateway_1oydn7z" targetRef="ExclusiveGateway_0z6h8bo" />
     <bpmn2:sequenceFlow id="SequenceFlow_0xyex4o" sourceRef="ExclusiveGateway_1oydn7z" targetRef="IntermediateThrowEvent_0czlf9a" />
-    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_0czlf9a">
+    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_0czlf9a" name="order completed">
       <bpmn2:incoming>SequenceFlow_0xyex4o</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_0e5wupo</bpmn2:outgoing>
       <bpmn2:messageEventDefinition messageRef="Message_12vpb3t" />
     </bpmn2:intermediateCatchEvent>
+    <bpmn2:textAnnotation id="TextAnnotation_1avaqzw">    <bpmn2:text><![CDATA[boundary which we immediately trigger,
+so that the process already exists and the payment message can be correlated]]></bpmn2:text>
+</bpmn2:textAnnotation>
+    <bpmn2:association id="Association_0jnjws8" sourceRef="IntermediateThrowEvent_1m225i3" targetRef="TextAnnotation_1avaqzw" />
   </bpmn2:process>
   <bpmn2:message id="Message_15xmeld" name="messagePayment" />
   <bpmn2:message id="Message_1pes68j" name="messageContinue" />
@@ -124,7 +128,7 @@
       <bpmndi:BPMNShape id="IntermediateCatchEvent_0rgxpw9_di" bpmnElement="IntermediateThrowEvent_0lgbs9f">
         <dc:Bounds x="292" y="339" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="310" y="375" width="0" height="0" />
+          <dc:Bounds x="269" y="375" width="81" height="13" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_05frfek_di" bpmnElement="SequenceFlow_05frfek">
@@ -151,7 +155,7 @@
       <bpmndi:BPMNShape id="IntermediateCatchEvent_0jm7c8d_di" bpmnElement="IntermediateThrowEvent_1m225i3">
         <dc:Bounds x="292" y="212" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="310" y="248" width="0" height="0" />
+          <dc:Bounds x="273" y="248" width="74" height="25" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0zfklan_di" bpmnElement="SequenceFlow_0zfklan">
@@ -213,9 +217,16 @@
       <bpmndi:BPMNShape id="IntermediateCatchEvent_1t2bvbr_di" bpmnElement="IntermediateThrowEvent_0czlf9a">
         <dc:Bounds x="743" y="95" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="761" y="131" width="0" height="0" />
+          <dc:Bounds x="721" y="131" width="80" height="13" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_1avaqzw_di" bpmnElement="TextAnnotation_1avaqzw">
+        <dc:Bounds x="164" y="42" width="317" height="91" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_0jnjws8_di" bpmnElement="Association_0jnjws8">
+        <di:waypoint xsi:type="dc:Point" x="312" y="212" />
+        <di:waypoint xsi:type="dc:Point" x="319" y="133" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn2:definitions>
