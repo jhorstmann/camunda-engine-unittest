@@ -42,7 +42,7 @@
       <bpmn2:messageEventDefinition messageRef="Message_1pes68j" />
     </bpmn2:intermediateCatchEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_0zfklan" sourceRef="ExclusiveGateway_0z6h8bo" targetRef="ExclusiveGateway_02w0crq" />
-    <bpmn2:parallelGateway id="ExclusiveGateway_02w0crq">
+    <bpmn2:parallelGateway id="ExclusiveGateway_02w0crq" camunda:asyncBefore="true">
       <bpmn2:incoming>SequenceFlow_0zfklan</bpmn2:incoming>
       <bpmn2:incoming>SequenceFlow_0e5wupo</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_01ed3zv</bpmn2:outgoing>
