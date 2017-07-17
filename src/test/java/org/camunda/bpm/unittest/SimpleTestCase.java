@@ -30,6 +30,7 @@ import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.historyS
 import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.runtimeService;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class SimpleTestCase {
 
@@ -69,10 +70,23 @@ public class SimpleTestCase {
         sendPayment.get();
         Thread.sleep(1000);
 
-        final HistoricProcessInstance historicProcessInstance = historyService().createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
-        assertNotNull(historicProcessInstance.getEndTime());
+        {
+            final HistoricProcessInstance historicProcessInstance = historyService().createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
+            assertNull(historicProcessInstance.getEndTime());
+        }
+
+        runtimeService().correlateMessage("messageOrderCompleted", businessKey);
+        Thread.sleep(1000);
 
         scheduledExecutorService.shutdown();
+
+        {
+            final HistoricProcessInstance historicProcessInstance = historyService().createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
+            assertNotNull(historicProcessInstance.getEndTime());
+        }
+
     }
+
+
 
 }

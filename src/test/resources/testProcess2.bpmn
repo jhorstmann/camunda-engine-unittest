@@ -49,16 +49,18 @@
       <bpmn2:outgoing>SequenceFlow_01ed3zv</bpmn2:outgoing>
     </bpmn2:parallelGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_01ed3zv" sourceRef="ExclusiveGateway_02w0crq" targetRef="end" />
-    <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_0czlf9a">
-      <bpmn2:incoming>SequenceFlow_0zu2rrp</bpmn2:incoming>
-      <bpmn2:outgoing>SequenceFlow_0e5wupo</bpmn2:outgoing>
-    </bpmn2:intermediateThrowEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_0e5wupo" sourceRef="IntermediateThrowEvent_0czlf9a" targetRef="ExclusiveGateway_02w0crq" />
     <bpmn2:sequenceFlow id="SequenceFlow_0zu2rrp" sourceRef="ExclusiveGateway_1n6w8d4" targetRef="IntermediateThrowEvent_0czlf9a" />
     <bpmn2:sequenceFlow id="SequenceFlow_1ri0rj9" sourceRef="createOrder" targetRef="ExclusiveGateway_0z6h8bo" />
+    <bpmn2:intermediateCatchEvent id="IntermediateThrowEvent_0czlf9a">
+      <bpmn2:incoming>SequenceFlow_0zu2rrp</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0e5wupo</bpmn2:outgoing>
+      <bpmn2:messageEventDefinition messageRef="Message_14xlbqw" />
+    </bpmn2:intermediateCatchEvent>
   </bpmn2:process>
   <bpmn2:message id="Message_15xmeld" name="messagePayment" />
   <bpmn2:message id="Message_1pes68j" name="messageContinue" />
+  <bpmn2:message id="Message_14xlbqw" name="messageOrderCompleted" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="testProcess2">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_3" bpmnElement="start">
@@ -167,18 +169,12 @@
           <dc:Bounds x="1070" y="205" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="IntermediateThrowEvent_0czlf9a_di" bpmnElement="IntermediateThrowEvent_0czlf9a">
-        <dc:Bounds x="743" y="95" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="761" y="131" width="0" height="0" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0e5wupo_di" bpmnElement="SequenceFlow_0e5wupo">
         <di:waypoint xsi:type="dc:Point" x="779" y="113" />
         <di:waypoint xsi:type="dc:Point" x="974" y="113" />
         <di:waypoint xsi:type="dc:Point" x="974" y="205" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="877" y="88" width="0" height="0" />
+          <dc:Bounds x="877" y="98" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0zu2rrp_di" bpmnElement="SequenceFlow_0zu2rrp">
@@ -186,7 +182,7 @@
         <di:waypoint xsi:type="dc:Point" x="225" y="113" />
         <di:waypoint xsi:type="dc:Point" x="743" y="113" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="240" y="149" width="0" height="0" />
+          <dc:Bounds x="240" y="159" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1ri0rj9_di" bpmnElement="SequenceFlow_1ri0rj9">
@@ -196,6 +192,12 @@
           <dc:Bounds x="616" y="205" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_0w6ekd3_di" bpmnElement="IntermediateThrowEvent_0czlf9a">
+        <dc:Bounds x="743" y="95" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="761" y="131" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn2:definitions>
