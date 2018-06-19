@@ -18,8 +18,16 @@ import org.camunda.bpm.engine.test.ProcessEngineRule;
 
 import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.*;
 
+import org.camunda.bpm.engine.variable.Variables;
+import org.camunda.bpm.engine.variable.impl.VariableMapImpl;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author Daniel Meyer
@@ -34,18 +42,16 @@ public class SimpleTestCase {
   @Deployment(resources = {"testProcess.bpmn"})
   public void shouldExecuteProcess() {
     // Given we create a new process instance
-    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess");
+    Map<String, Object> variables = new HashMap<>();
+    variables.put("upload", Variables.objectValue(new ByteArrayInputStream("foobar".getBytes(StandardCharsets.UTF_8)), true).create());
+    //VariableMapImpl variables = new VariableMapImpl();
+    //variables.putValueTyped("upload", Variables.objectValue(new ByteArrayInputStream("foobar".getBytes(StandardCharsets.UTF_8)), true).create());
+    String businessKey = UUID.randomUUID().toString();
+    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess", businessKey, variables);
     // Then it should be active
     assertThat(processInstance).isActive();
     // And it should be the only instance
     assertThat(processInstanceQuery().count()).isEqualTo(1);
-    // And there should exist just a single task within that process instance
-    assertThat(task(processInstance)).isNotNull();
-
-    // When we complete that task
-    complete(task(processInstance));
-    // Then the process instance should be ended
-    assertThat(processInstance).isEnded();
   }
 
 }

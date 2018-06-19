@@ -3,13 +3,27 @@
   <groupId>org.camunda.bpm</groupId>
   <artifactId>camunda-engine-unittest</artifactId>
   <version>0.1.0-SNAPSHOT</version>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <packaging>jar</packaging>
 
   <properties>
     <!-- set the version for camunda BPM here -->
-    <version.camunda>7.8.0</version.camunda>
+    <version.camunda>7.9.0</version.camunda>
     <version.junit>4.11</version.junit>
     <version.h2>1.3.168</version.h2>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
   <dependencyManagement>
@@ -36,44 +50,6 @@
       <groupId>org.camunda.bpm</groupId>
       <artifactId>camunda-engine</artifactId>
       <scope>provided</scope>
-    </dependency>
-
-    <!-- OPTIONAL: spin process engine plugin -->
-    <dependency>
-      <groupId>org.camunda.bpm</groupId>
-      <artifactId>camunda-engine-plugin-spin</artifactId>
-    </dependency>
-
-    <!-- OPTIONAL: spin dataformats -->
-    <dependency>
-      <groupId>org.camunda.spin</groupId>
-      <artifactId>camunda-spin-dataformat-json-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.camunda.spin</groupId>
-      <artifactId>camunda-spin-dataformat-xml-dom</artifactId>
-    </dependency>
-
-    <!-- OPTIONAL: connect process engine plugin -->
-    <dependency>
-      <groupId>org.camunda.bpm</groupId>
-      <artifactId>camunda-engine-plugin-connect</artifactId>
-    </dependency>
-
-    <!-- OPTIONAL: connectors -->
-    <dependency>
-      <groupId>org.camunda.connect</groupId>
-      <artifactId>camunda-connect-http-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.camunda.connect</groupId>
-      <artifactId>camunda-connect-soap-http-client</artifactId>
-    </dependency>
-
-    <!-- OPTIONAL: freemarker process engine plugin -->
-    <dependency>
-      <groupId>org.camunda.template-engines</groupId>
-      <artifactId>camunda-template-engines-freemarker</artifactId>
     </dependency>
 
     <dependency>
